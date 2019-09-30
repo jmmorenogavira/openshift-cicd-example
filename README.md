@@ -1,0 +1,1 @@
+# Sample project for OpenShift CI/CD demos
