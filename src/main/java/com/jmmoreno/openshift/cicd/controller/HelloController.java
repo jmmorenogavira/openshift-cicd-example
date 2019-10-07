@@ -17,12 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 public class HelloController {
 
 	private static final String ENV_PROPERTY_NAME = "HELLO_FROM_NAME";
+	private static final String ENV_PROPERTY_HOSTNAME = "HOSTNAME";
 
 	@Autowired
 	private Environment env;
 
 	@GetMapping
-	public ResponseEntity<String> findAll() {
+	public ResponseEntity<String> sayHello() {
 		if (env.containsProperty(ENV_PROPERTY_NAME)) {
 			return ResponseEntity.ok("Hello from " + env.getProperty(ENV_PROPERTY_NAME));
 		} else {
@@ -30,4 +31,13 @@ public class HelloController {
 		}
 	}
 
+	@GetMapping(path = "/whoami")
+	public ResponseEntity<String> whoami() {
+		if (env.containsProperty(ENV_PROPERTY_NAME)) {
+			return ResponseEntity.ok("Hello from POD " + env.getProperty(ENV_PROPERTY_HOSTNAME) + " (" + env.getProperty(ENV_PROPERTY_NAME) + ")");
+		} else {
+			return ResponseEntity.ok("Hello from POD " + env.getProperty(ENV_PROPERTY_HOSTNAME));
+		}
+	}
+	
 }
