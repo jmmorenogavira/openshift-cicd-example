@@ -1,0 +1,44 @@
+CI/CD steps:
+
+-. Crear un repositorio con un proyecto en GOGS para el proyecto de Spring Boot
+    https://github.com/jmmorenogavira/openshift-cicd-example
+
+-. Desplegar el entorno DEV
+    - Definir Health Checks
+    - Agregar WebHook desde el repositorio
+
+-. Desplegar el entorno PRE
+    - Definir Health Checks
+    - Eliminar los Triggers
+    - Reconfigurar para desplegar en base a un ImageStream
+
+-. Desplegar el entorno PRO
+    - Definir Health Checks
+    - Eliminar los Triggers
+    - Reconfigurar para desplegar en base a un ImageStream
+
+-. Desplegar Jenkins y construir un pipeline que promocione entre los entornos
+    - Desplegar Jenkins basandonos en el Template sin almacenamiento
+    - Construir los siguientes pipelines
+        - Despliegue desde DEV en PRE
+        - Despliegue desde PRE en PRO
+        - Despliegue completo desde DEV hasta PRO
+
+-. Estrategias de despliegue. Ejemplo y configuración
+    - Ilustrar los ejemplos
+    - Configurar cada entorno con la estrategia Rolling
+    - Definir la variable HELLO_FROM_NAME en cada entorno
+    - Definir una ruta comun para ilustrar Blue/Green Deployment
+
+-. Crear una base de datos PostgreSQL para el entorno de PRO
+    - Desplegar PostgreSQL basandonos en el Template
+
+-. Configurar PRO para que utilice la base de datos
+    - Actualizar PRO para que utilice el profile "persistent" de Spring
+    - Configurar las variables para el acceso a la BD desde PRO
+    - Crear varios Books usando los servicios desplegados
+
+-. Configurar PRO en modo HA
+    - Establecer limites de recursos
+    - Establecer auto-escalado de PODs a demanda
+
