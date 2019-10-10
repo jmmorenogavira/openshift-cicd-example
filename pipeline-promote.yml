@@ -1,0 +1,115 @@
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "jenkins", "namespace": "", "kind": "DeploymentConfig"}]'
+  labels:
+    app: cicd
+    name: pipeline-promote
+  name: pipeline-promote
+spec:
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        pipeline {
+          agent {
+            node {
+              label 'maven'
+            }
+          }
+          options {
+            timeout(time: 60, unit: 'MINUTES')
+          }
+          stages {
+            stage('Clear Workspace') {
+              steps {
+                script {
+                  deleteDir()
+                }
+              }
+            }
+
+            stage('Build image') {
+              steps {
+                script {
+                  openshift.withCluster() {
+                    openshift.withProject() {
+                      def buildSelector =  openshift.startBuild("books-dev")
+                      buildSelector.logs('-f')
+                    } 
+                  }
+                }
+              }
+            }
+
+            stage('Wait deploy') {
+              steps {
+                script {
+                  openshift.withCluster() {
+                    openshift.withProject() {
+                      def dc = openshift.selector('dc', 'books-dev')
+                      dc.rollout().status()
+                    } 
+                  }
+                }
+              }
+            }
+
+            stage('Tag to PRE?') {
+              steps {
+                timeout(time:15, unit:'MINUTES') {
+                  input message: "Promote to PRE?", ok: "Promote"
+                }
+                script {
+                  openshift.withCluster() {
+                    openshift.withProject() {
+                      openshift.tag("books-dev:latest", "books-pre:latest")
+                    }
+                  }
+                }
+              }
+            }
+            stage('Deploy PRE') {
+              steps {
+                script {
+                  openshift.withCluster() {
+                    openshift.withProject() {
+                      def dc = openshift.selector('dc', 'books-pre')
+                      dc.rollout().latest()
+                      dc.rollout().status()
+                    }
+                  }
+                }
+              }
+            }
+
+            stage('Promote to PRO?') {
+              steps {
+                timeout(time:15, unit:'MINUTES') {
+                  input message: "Promote to PRO?", ok: "Promote"
+                }
+                script {
+                  openshift.withCluster() {
+                    openshift.withProject() {
+                      openshift.tag("books-pre:latest", "books-pro:latest")
+                    }
+                  }
+                }
+              }
+            }
+            stage('Deploy PRO') {
+              steps {
+                script {
+                  openshift.withCluster() {
+                    openshift.withProject() {
+                      def dc = openshift.selector('dc', 'books-pro')
+                      dc.rollout().latest()
+                      dc.rollout().status()
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+    type: JenkinsPipeline
